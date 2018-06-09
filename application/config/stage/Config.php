@@ -1,7 +1,7 @@
 <?php
 
 // site details
-define('SITE_URL',  'http://terrijon-blog.topofrift.com/');
+define('SITE_URL',  'http://stage.simple-zillow.terrijonfowler.com/');
 
 // paths
 define('ABS_BASE_PATH', $_SERVER['DOCUMENT_ROOT'] . '/');

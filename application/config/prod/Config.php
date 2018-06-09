@@ -1,7 +1,7 @@
 <?php
 
 // site details
-define('SITE_URL',  'http://www.terrijonfowler.com/');
+define('SITE_URL',  'http://simple-zillow.terrijonfowler.com/');
 
 // paths
 define('ABS_BASE_PATH', $_SERVER['DOCUMENT_ROOT'] . '/');
