@@ -1,0 +1,119 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <title><?php echo SITE_NAME; ?></title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" in}tegrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function(){
+                $('#search').on('click', function(){
+                    $('#modal-search').modal('show');
+                    //$(this).parent().html('<i class="fas fa-spinner fa-pulse"></i>');
+
+
+                    setTimeout(function() {
+                        $('#modal-search').modal('hide');
+
+                        for (var i = 1; i < 21; i++) {
+                            $('#table-list').append('<tr><th scope="row">' + i + '</th></tr>');
+                        }
+                    }, 3000);
+                   
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-4 text-center">
+                    <h1>Operation New House</h1>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <form class="form-inline ml-auto" style="margin-bottom: 0px">
+                                <label>Price</label>
+                                <select class="custom-select custom-select-sm mx-2">
+                                    <option value="100">$100,000</option>
+                                    <option value="200">$200,000</option>
+                                    <option value="300">$300,000</option>
+                                    <option value="400">$400,000</option>
+                                    <option value="500">$500,000</option>
+                                </select>
+    
+                                <label>Beds</label>
+                                <select class="custom-select custom-select-sm mx-2">
+                                    <option value="1">1+</option>
+                                    <option value="2">2+</option>
+                                    <option value="3">3+</option>
+                                    <option value="4">4+</option>
+                                    <option value="5">5+</option>
+                                </select>
+
+                                <label>Baths</label>
+                                <select class="custom-select custom-select-sm mx-2">
+                                    <option value="1">1+</option>
+                                    <option value="2">2+</option>
+                                    <option value="3">3+</option>
+                                    <option value="4">4+</option>
+                                    <option value="5">5+</option>
+                                </select>
+
+                                <label>Distance from Work</label>
+                                <select class="custom-select custom-select-sm mx-2">
+                                    <option value="10">10 mi</option>
+                                    <option value="15">15 mi</option>
+                                    <option value="20">20 mi</option>
+                                    <option value="25">25 mi</option>
+                                    <option value="30">30 mi</option>
+                                </select>
+
+                                <div class="ml-auto">
+                                    <button id="search" type="button" class="btn btn-success btn-sm"><i class="fas fa-search"></i> Search</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card-body">
+                            <table id="table-list" class="table table-sm">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th scope="col">Price</th>
+                                        <th scope="col"># of Bedrooms</th>
+                                        <th scope="col"># of Bathrooms</th>
+                                        <th scope="col">Square Footage</th>
+                                        <th scope="col">Year Built</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div id="modal-search" class="modal text-center" tabindex="-1" role="dialog" data-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <i class="fas fa-spinner fa-pulse" style="font-size: 150px"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
