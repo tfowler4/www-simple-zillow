@@ -20,6 +20,8 @@ define('FOLDER_DATA',        ABS_BASE_PATH . 'data/');
 define('FOLDER_LOGS',        ABS_BASE_PATH . 'data/logs/');
 define('FOLDER_BACKUPS',     ABS_BASE_PATH . 'data/backups/');
 
+define('ZILLOW_KEY', 'X1-ZWz1ghhd0anevf_5upah');
+
 define('SITE_JS',  SITE_URL . 'public/js/');
 define('SITE_CSS', SITE_URL . 'public/css/');
 
