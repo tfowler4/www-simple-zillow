@@ -68,3 +68,31 @@ function loadView($view, $data = array()) {
 function loadError() {
     redirect(SITE_URL . 'error');
 }
+
+/**
+ * load all javascript files associated with the controller page
+ *
+ * @return void
+ */
+function loadJS() {
+    // load global JS files
+    $filePath = FOLDER_JS . '*.js';
+
+    foreach(glob($filePath) as $file) {
+        $file = SITE_JS . basename($file) . '?v=' . TIMESTAMP;
+        echo '<script src="' . $file . '"></script>';
+    }
+}
+
+/**
+ * load a HTML file
+ *
+ * @param  string $filePath [ path of html file ]
+ *
+ * @return void
+ */
+function loadFile($filePath) {
+    if ( file_exists($filePath) ) {
+        include $filePath;
+    }
+}

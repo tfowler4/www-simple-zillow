@@ -15,6 +15,7 @@ class Home extends AbstractController {
     }
 
     public function index() {
+        loadView('header/index', $this->_data);
         loadView('home/index', $this->_data);
     }
 }
