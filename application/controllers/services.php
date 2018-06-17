@@ -58,7 +58,7 @@ class Services extends AbstractController {
         require_once ABS_BASE_PATH . 'library/ultimate-web-scraper/support/tag_filter.php';
     
         // Retrieve a URL (emulating Firefox by default).
-        $url = 'https://www.zillow.com/search/GetResults.htm?spt=homes&status=110001&lt=111101&ht=100000&pr=200000,500000&mp=804,2011&bd=0%2C&ba=0%2C&sf=,&lot=0%2C&yr=,&singlestory=0&hoa=0%2C&pho=0&pets=0&parking=0&laundry=0&income-restricted=0&fr-bldg=0&condo-bldg=0&furnished-apartments=0&cheap-apartments=0&studio-apartments=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&sch=100111&zoom=11&rect=-84715577,33843330,-84346505,34084511&p=1&sort=days&search=map&rid=12562&rt=6&listright=true&isMapSearch=true&zoom=11';
+        $url = 'https://www.zillow.com/search/GetResults.htm?spt=homes&status=100000&lt=111101&ht=100000&pr=200000,500000&mp=804,2009&bd=5%2C&ba=3.0%2C&sf=3500,&lot=0%2C&yr=,&singlestory=0&hoa=0%2C&pho=0&pets=0&parking=0&laundry=0&income-restricted=0&fr-bldg=0&condo-bldg=0&furnished-apartments=0&cheap-apartments=0&studio-apartments=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=0&pf=0&sch=100111&zoom=11&rect=-84464608,33978100,-84095536,34218899&p=1&sort=days&search=maplist&rid=16733&rt=6&listright=true&isMapSearch=true&zoom=11';
         $web = new WebBrowser();
         $result = $web->Process($url);
 
@@ -83,18 +83,6 @@ class Services extends AbstractController {
                 $propertyData = json_decode($databaseProperties[$zpid]['response']);
                 $propertyData = (array)$propertyData;
 
-                if ( empty($propertyData['zip']) ) {
-                    list($address, $city, $state, $zip) = $this->getPropertyAddress($propertyData['url'], $zpid);
-                    $propertyData['address']     = $address;
-                    $propertyData['city']        = $city;
-                    $propertyData['state']       = $state;
-                    $propertyData['zip']         = $zip;
-                    $propertyData['large_photo'] = str_replace('p_a', 'p_e', $propertyData['small_photo']);
-
-print_r($propertyData);
-                    $this->updatePropertyData($zpid, json_encode($propertyData));
-                }
-
                 $json[] = $propertyData;
                 continue;
             }
@@ -111,19 +99,40 @@ print_r($propertyData);
             $propertyData['lot']         = $secondLevel[6];
             $propertyData['sale']        = $secondLevel[8];
             $propertyData['saletype']    = $secondLevel[9];
-            $propertyData['url']         = $this->getPropertyUrl($web, $zpid);
+            $propertyData['url']         = $this->getPropertyUrl($zpid);
             
-            list($address, $city, $state, $zip) = $this->getPropertyAddress($propertyData['url'], $zpid);
+            list($address, $city, $state, $county, $zip) = $this->getPropertyAddress($propertyData['latitude'], $propertyData['longitude']);
             $propertyData['address']     = $address;
             $propertyData['city']        = $city;
             $propertyData['state']       = $state;
+            $propertyData['county']      = $county;
             $propertyData['zip']         = $zip;
-            $json[]                      = $propertyData;
+            
+            list($workDistance, $workDuration) = $this->getDistanceFromWork($propertyData['latitude'], $propertyData['longitude']);
+            $propertyData['work_distance'] = number_format($workDistance, 1, '.', ',');
+            $propertyData['work_duration'] = number_format($workDuration, 1, '.', ',');
+
+            $json[] = $propertyData;
 
             $this->addPropertyToDatabase($zpid, json_encode($propertyData));
         }
         
         echo json_encode($json);
+    }
+    
+    public function getDistanceFromWork($latitude, $longitude) {
+        $midtownLatitude  = 33.786662;
+        $midtownLongitude = -84.391999;
+
+        $bingPayload = json_decode(file_get_contents(
+            'https://dev.virtualearth.net/REST/v1/Routes/DistanceMatrix?origins=' . $latitude . ',' . $longitude . '&destinations=' . $midtownLatitude . ',' . -84.391999 . '&distanceUnit=mi&travelMode=driving&key=' . BING_KEY
+        ));
+        
+        $resourceSet = $bingPayload->resourceSets;
+        $resources   = $resourceSet[0]->resources;
+        $results     = $resources[0]->results;
+
+        return array($results[0]->travelDistance, $results[0]->travelDuration);
     }
 
     public function updatePropertyData($zpid, $propertyData) {
@@ -144,52 +153,28 @@ print_r($propertyData);
         return $query->execute();
     }
 
-    public function getPropertyAddress($url, $zpid) {
-        $url     = str_replace('%2f', '/', $url);
-        $url     = str_replace('https://www.zillow.com/homedetails/', '', $url);
-        $url     = str_replace('https://www.zillow.com/captchaPerimeterX/?url=/homedetails/', '', $url);
-        $zpidPos = strpos($url, '/' . $zpid);
-        $address = substr($url, 0, $zpidPos);
+    public function getPropertyAddress($latitude, $longitude) {
+        $bingPayload = json_decode(file_get_contents('http://dev.virtualearth.net/REST/v1/Locations/' . $latitude . ',' . $longitude . '?key=' . BING_KEY));
 
-        $address = str_replace('-', ' ', $address);
-        $addressValues = explode(' ', $address);
-        $numOfAddressValues = count($addressValues);
+        $resourceSet = $bingPayload->resourceSets;
+        $resources   = $resourceSet[0]->resources;
+        $address     = $resources[0]->address;
+        $street      = $address->addressLine;
+        $state       = $address->adminDistrict;
+        $county      = $address->adminDistrict2;
+        $city        = $address->locality;
+        $zip         = $address->postalCode;
 
-        $zip    = end($addressValues);
-        array_pop($addressValues);
-        $state  = end($addressValues);
-        array_pop($addressValues);
-        $city   = end($addressValues);
-        array_pop($addressValues);
-        $street = implode(' ', $addressValues);
-        /*
-        echo "<br>Url: ";
-        print_r($url);        
-        echo "<br>Street: ";
-        print_r($street);
-        echo "<br>City: ";
-        print_r($city);
-        echo "<br>State: ";
-        print_r($state);
-        echo "<br>Zip: ";
-        print_r($zip);
-        */
-        return array($street, $city, $state, $zip);
+        return array($street, $city, $state, $county, $zip);
     }
 
-    public function getPropertyUrl($web, $zpid) {
-        $url = 'https://www.zillow.com/homedetails//' . $zpid . '_zpid/';
-        $result = $web->Process($url);
+    public function getPropertyUrl($zpid) {
+        $url = 'https://www.zillow.com/homedetails/' . $zpid . '_zpid/';
 
-        return $result['url'];
+        return $url;
     }
 
     public function checkDatabaseForProperties($zpids) {
-        // id
-        // zpid
-        // response
-        // data_modified
-
         $listOfZpids = implode(', ', $zpids);
 
         $query = sprintf(
@@ -200,25 +185,11 @@ print_r($propertyData);
             FROM
                 properties
             WHERE
-                zpid IN (%s)"
-        , $listOfZpids);
+                zpid IN (%s)",
+        $listOfZpids);
 
-        /*
-        $query = sprintf(
-            "SELECT
-                id AS id,
-                zpid AS zpid,
-                response AS response
-            FROM
-                properties
-            WHERE
-                zpid IN (:zpids)"
-        );
-        */
 
         $query = $this->_dbh->prepare($query);
-
-        //$query->bindParam(':zpids', $listOfZpids, PDO::PARAM_STR);
 
         $query->execute();
 

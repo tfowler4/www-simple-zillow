@@ -21,6 +21,7 @@ define('FOLDER_LOGS',        ABS_BASE_PATH . 'data/logs/');
 define('FOLDER_BACKUPS',     ABS_BASE_PATH . 'data/backups/');
 
 define('ZILLOW_KEY', 'X1-ZWz1ghhd0anevf_5upah');
+define('BING_KEY', 'Ahzyo8mnHnTKlHU-TPXuSOQxOYbGk1jlxtZtqNsBQAbFWlXHg9CYnp_j3zAJLYIN');
 
 define('SITE_JS',  SITE_URL . 'public/js/');
 define('SITE_CSS', SITE_URL . 'public/css/');
