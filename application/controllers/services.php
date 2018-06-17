@@ -80,9 +80,22 @@ class Services extends AbstractController {
             $propertyData = null;
 
             if ( isset($databaseProperties[$zpid]) ) {
-                $propertyData = $databaseProperties[$zpid];
+                $propertyData = json_decode($databaseProperties[$zpid]['response']);
+                $propertyData = (array)$propertyData;
 
-                $json[] = json_decode($propertyData);
+                if ( empty($propertyData['zip']) ) {
+                    list($address, $city, $state, $zip) = $this->getPropertyAddress($propertyData['url'], $zpid);
+                    $propertyData['address']     = $address;
+                    $propertyData['city']        = $city;
+                    $propertyData['state']       = $state;
+                    $propertyData['zip']         = $zip;
+                    $propertyData['large_photo'] = str_replace('p_a', 'p_e', $propertyData['small_photo']);
+
+print_r($propertyData);
+                    $this->updatePropertyData($zpid, json_encode($propertyData));
+                }
+
+                $json[] = $propertyData;
                 continue;
             }
 
@@ -94,28 +107,74 @@ class Services extends AbstractController {
             $propertyData['bathrooms']   = $secondLevel[2];
             $propertyData['sqft']        = number_format($secondLevel[3], 0, '', ',');
             $propertyData['small_photo'] = $secondLevel[5];
-            $propertyData['large_photo'] = $secondLevel[5];
+            $propertyData['large_photo'] = str_replace('p_a', 'p_e', $propertyData['small_photo']);
             $propertyData['lot']         = $secondLevel[6];
             $propertyData['sale']        = $secondLevel[8];
             $propertyData['saletype']    = $secondLevel[9];
             $propertyData['url']         = $this->getPropertyUrl($web, $zpid);
-            $propertyData['address']     = $this->getPropertyAddress($propertyData['url'], $zpid);
+            
+            list($address, $city, $state, $zip) = $this->getPropertyAddress($propertyData['url'], $zpid);
+            $propertyData['address']     = $address;
+            $propertyData['city']        = $city;
+            $propertyData['state']       = $state;
+            $propertyData['zip']         = $zip;
             $json[]                      = $propertyData;
-echo "<br>";
-print_r($propertyData);
-echo"<br>";
+
             $this->addPropertyToDatabase($zpid, json_encode($propertyData));
-            exit;
-        }        
+        }
+        
+        echo json_encode($json);
+    }
+
+    public function updatePropertyData($zpid, $propertyData) {
+        $query = sprintf(
+            "UPDATE
+                properties
+            SET
+                response = :response
+            WHERE
+                zpid = :zpid"
+        );
+
+        $query = $this->_dbh->prepare($query);
+
+        $query->bindParam(":zpid", $zpid);
+        $query->bindParam(":response", $propertyData);
+
+        return $query->execute();
     }
 
     public function getPropertyAddress($url, $zpid) {
+        $url     = str_replace('%2f', '/', $url);
         $url     = str_replace('https://www.zillow.com/homedetails/', '', $url);
+        $url     = str_replace('https://www.zillow.com/captchaPerimeterX/?url=/homedetails/', '', $url);
         $zpidPos = strpos($url, '/' . $zpid);
         $address = substr($url, 0, $zpidPos);
-        $address = str_replace('-', ' ', $address);
 
-        return $address;
+        $address = str_replace('-', ' ', $address);
+        $addressValues = explode(' ', $address);
+        $numOfAddressValues = count($addressValues);
+
+        $zip    = end($addressValues);
+        array_pop($addressValues);
+        $state  = end($addressValues);
+        array_pop($addressValues);
+        $city   = end($addressValues);
+        array_pop($addressValues);
+        $street = implode(' ', $addressValues);
+        /*
+        echo "<br>Url: ";
+        print_r($url);        
+        echo "<br>Street: ";
+        print_r($street);
+        echo "<br>City: ";
+        print_r($city);
+        echo "<br>State: ";
+        print_r($state);
+        echo "<br>Zip: ";
+        print_r($zip);
+        */
+        return array($street, $city, $state, $zip);
     }
 
     public function getPropertyUrl($web, $zpid) {
