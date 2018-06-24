@@ -5,6 +5,7 @@ var globalServices = (function() {
         $.ajax({
             type: 'POST',
             url: 'http://localhost/www-simple-zillow/services/getSearchResults/',
+            data: formData,
             dataType: 'json',
             cache: false,
             contentType : false,
